@@ -45,7 +45,7 @@ try {
     socket.on("createRoom", async (callback) => {
       // callback here refers to the callback function from the client passed as data
       const roomId = uuidV4();
-      console.info({ [socket.id]: `createRoom id ${roomId}`, callback });
+      console.info({ [socket.id]: `createRoom id ${roomId}` });
       await socket.join(roomId);
 
       // set roomId as a key and roomData including players as value in the map
@@ -64,7 +64,7 @@ try {
         roomId: args.roomId,
         players: [],
       };
-      console.info({ [socket.id]: `joinRoom id ${args.roomId}`, callback });
+      console.info({ [socket.id]: `joinRoom id ${args.roomId}` });
 
       let error, message;
 
