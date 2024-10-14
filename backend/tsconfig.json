@@ -13,6 +13,6 @@
     "transpileOnly": true,
     "esm": true
   },
-  "include": ["src/**/*", "../frontend/src/socket.ts"], // Specifies which files to include when compiling your project.
+  "include": ["src/**/*"], // Specifies which files to include when compiling your project.
   "exclude": ["node_modules", "**/*.spec.ts", "frontend"] // Specifies which files to exclude when compiling your project.
 }
