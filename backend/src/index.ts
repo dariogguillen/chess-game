@@ -3,19 +3,22 @@ import { v4 as uuidV4 } from "uuid";
 import http from "http";
 import { Server } from "socket.io";
 
+interface PlayerObj {
+  id: string;
+  username: string;
+}
+
+interface RoomObj {
+  roomId: string;
+  players: PlayerObj[];
+}
+
 try {
   const app = express();
-
-  console.log({ app });
-
   const server = http.createServer(app);
-
-  console.log({ server });
 
   // set port to value received from environment variable or 8080 if null
   const port = process.env.PORT || 8080;
-
-  console.log({ port });
 
   // upgrade http server to websocket server
   const io = new Server(server, {
@@ -25,16 +28,16 @@ try {
   });
 
   // TODO: Use a proper DB
-  const rooms = new Map();
+  const rooms: Map<string, RoomObj> = new Map();
 
   // io.connection;
   io.on("connection", (socket) => {
     // socket refers to the client socket that just got connected.
     // each socket is assigned an id
-    console.log(socket.id, "connected");
+    console.info({ [socket.id]: "connected" });
 
     socket.on("username", (username) => {
-      console.log("username:", username);
+      console.info({ [socket.id]: `username ${username}` });
       socket.data.username = username;
     });
 
@@ -42,6 +45,7 @@ try {
     socket.on("createRoom", async (callback) => {
       // callback here refers to the callback function from the client passed as data
       const roomId = uuidV4();
+      console.info({ [socket.id]: `createRoom id ${roomId}`, callback });
       await socket.join(roomId);
 
       // set roomId as a key and roomData including players as value in the map
@@ -56,18 +60,23 @@ try {
 
     socket.on("joinRoom", async (args, callback) => {
       // check if room exists and has a player waiting
-      const room = rooms.get(args.roomId);
+      const room = rooms.get(args.roomId) || {
+        roomId: args.roomId,
+        players: [],
+      };
+      console.info({ [socket.id]: `joinRoom id ${args.roomId}`, callback });
+
       let error, message;
 
       if (!room) {
         // if room does not exist
         error = true;
         message = "room does not exist";
-      } else if (room.length <= 0) {
+      } else if (room.players.length <= 0) {
         // if room is empty set appropriate message
         error = true;
         message = "room is empty";
-      } else if (room.length >= 2) {
+      } else if (room.players.length >= 2) {
         // if room is full
         error = true;
         message = "room is full"; // set message to 'room is full'
@@ -110,10 +119,12 @@ try {
 
     socket.on("move", (data) => {
       // emit to all sockets in the room except the emitting socket.
+      console.info({ [socket.id]: `move`, data });
       socket.to(data.room).emit("move", data.move);
     });
 
     socket.on("disconnect", () => {
+      console.info({ [socket.id]: `disconnect` });
       const gameRooms = Array.from(rooms.values());
       gameRooms.forEach((room) => {
         const userInRoom = room.players.find(
@@ -131,7 +142,9 @@ try {
         }
       });
     });
+
     socket.on("closeRoom", async (data) => {
+      console.info({ [socket.id]: `closeRoom` });
       socket.to(data.roomId).emit("closeRoom", data); // <- 1 inform others in the room that the room is closing
 
       const clientSockets = await io.in(data.roomId).fetchSockets(); // <- 2 get all sockets in a room
