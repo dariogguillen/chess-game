@@ -1,30 +1,31 @@
 import { useEffect, useState, useCallback } from "react";
 import Container from "@mui/material/Container";
 import Game from "./Game";
-import InitGame from "./InitGame";
+import InitGame, { PlayerObj, RoomObj } from "./InitGame";
 import CustomDialog from "./components/CustomDialog";
 import socket from "./socket";
 import { TextField } from "@mui/material";
+import { BoardOrientation } from "react-chessboard/dist/chessboard/types";
 
 const App = () => {
   const [username, setUsername] = useState("");
   const [usernameSubmitted, setUsernameSubmitted] = useState(false);
 
   const [room, setRoom] = useState("");
-  const [orientation, setOrientation] = useState("");
-  const [players, setPlayers] = useState([]);
+  const [orientation, setOrientation] = useState<BoardOrientation>("white");
+  const [players, setPlayers] = useState<PlayerObj[]>([]);
 
   // resets the states responsible for initializing a game
   const cleanup = useCallback(() => {
     setRoom("");
-    setOrientation("");
+    setOrientation("white");
     setPlayers([]);
   }, []);
 
   useEffect(() => {
-    socket.on("opponentJoined", (roomData) => {
+    socket.on("opponentJoined", (roomData: RoomObj) => {
       console.log({ roomData });
-      setPlayers(roomData.players);
+      setPlayers(roomData.players || []);
     });
   }, []);
 
@@ -59,7 +60,6 @@ const App = () => {
         <Game
           room={room}
           orientation={orientation}
-          username={username}
           players={players}
           // the cleanup function will be used by Game to reset the state when a game is over
           cleanup={cleanup}

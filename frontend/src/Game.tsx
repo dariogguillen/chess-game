@@ -15,9 +15,10 @@ import {
 } from "@mui/material";
 import socket from "./socket";
 import { BoardOrientation } from "react-chessboard/dist/chessboard/types";
+import { PlayerObj } from "./InitGame";
 
 interface GameObj {
-  players: string;
+  players: PlayerObj[];
   room: string;
   orientation: BoardOrientation;
   cleanup: () => void;
@@ -62,6 +63,7 @@ const Game = ({ players, room, orientation, cleanup }: GameObj) => {
 
         return result;
       } catch (e) {
+        console.error(e);
         return null;
       } // null if the move was illegal, the move object if the move was legal
     },
@@ -107,7 +109,7 @@ const Game = ({ players, room, orientation, cleanup }: GameObj) => {
   }, [makeAMove]);
 
   useEffect(() => {
-    socket.on("playerDisconnected", (player) => {
+    socket.on("playerDisconnected", (player: PlayerObj) => {
       console.log({ player });
       setOver(`${player.username} has disconnected`); // set game over
     });

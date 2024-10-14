@@ -1,9 +1,27 @@
 import { Button, Stack, TextField } from "@mui/material";
-import { useState } from "react";
+import { Dispatch, useState } from "react";
 import CustomDialog from "./components/CustomDialog";
 import socket from "./socket";
+import { BoardOrientation } from "react-chessboard/dist/chessboard/types";
 
-const InitGame = ({ setRoom, setOrientation, setPlayers }) => {
+interface InitGameObj {
+  setRoom: Dispatch<string>;
+  setOrientation: Dispatch<BoardOrientation>;
+  setPlayers: Dispatch<PlayerObj[]>;
+}
+
+export interface PlayerObj {
+  id: string;
+  username: string;
+}
+export interface RoomObj {
+  roomId?: string;
+  players?: PlayerObj[];
+  error?: string;
+  message?: string;
+}
+
+const InitGame = ({ setRoom, setOrientation, setPlayers }: InitGameObj) => {
   const [roomDialogOpen, setRoomDialogOpen] = useState(false);
   const [roomInput, setRoomInput] = useState(""); // input state
   const [roomError, setRoomError] = useState("");
@@ -22,12 +40,13 @@ const InitGame = ({ setRoom, setOrientation, setPlayers }) => {
         handleContinue={() => {
           // join a room
           if (!roomInput) return; // if given room input is valid, do nothing.
-          socket.emit("joinRoom", { roomId: roomInput }, (r) => {
+          socket.emit("joinRoom", { roomId: roomInput }, (r: RoomObj) => {
             // r is the response from the server
-            if (r.error) return setRoomError(r.message); // if an error is returned in the response set roomError to the error message and exit
+            if (r.error)
+              return setRoomError(r.message || "ERROR JOINING A ROOM"); // if an error is returned in the response set roomError to the error message and exit
             console.log("response:", r);
-            setRoom(r?.roomId); // set room to the room ID
-            setPlayers(r?.players); // set players array to the array of players in the room
+            if (r.roomId) setRoom(r.roomId); // set room to the room ID
+            if (r.players) setPlayers(r?.players); // set players array to the array of players in the room
             setOrientation("black"); // set orientation as black
             setRoomDialogOpen(false); // close dialog
           });

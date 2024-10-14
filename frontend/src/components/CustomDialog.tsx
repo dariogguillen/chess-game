@@ -12,7 +12,7 @@ interface CustomDialogObj {
   title: string;
   contentText: string;
   handleContinue: MouseEventHandler;
-  handleClose: () => void;
+  handleClose?: () => void;
 }
 
 const CustomDialog = ({
