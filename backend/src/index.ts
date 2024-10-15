@@ -1,3 +1,4 @@
+import cors from "cors";
 import express from "express";
 import { v4 as uuidV4 } from "uuid";
 import http from "http";
@@ -15,16 +16,29 @@ interface RoomObj {
 
 try {
   const app = express();
+  app.use(cors());
   const server = http.createServer(app);
 
   // set port to value received from environment variable or 8080 if null
   const port = process.env.PORT || 8080;
+  const frontendUrl = process.env.FRONTEND_URL;
+  console.log({ frontendUrl });
 
   // upgrade http server to websocket server
+  const origin = frontendUrl || "*";
+  // const origin = "*";
   const io = new Server(server, {
-    cors: process.env.FRONTEND_URL
-      ? { origin: process.env.FRONTEND_URL }
-      : { origin: "*" }, // allow connection from any origin
+    cors: {
+      origin: origin,
+      methods: ["GET", "POST"],
+      allowedHeaders: ["custom-header"],
+      credentials: true,
+    }, // allow connection from any origin
+  });
+
+  app.get("/chess-game/hello", (req, res) => {
+    console.log({ req, res });
+    res.send("Hello word Expres!!");
   });
 
   // TODO: Use a proper DB
